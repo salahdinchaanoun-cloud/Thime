@@ -1,87 +1,97 @@
 #!/data/data/com.termux/files/usr/bin/bash
 BASE="$HOME/.termux-x"
 mkdir -p "$BASE"
-source "$BASE/config.sh" 2>/dev/null || true
 
-c_reset='\033[0m'; c_dim='\033[2m'; c_bold='\033[1m'
-c_green='\033[38;5;46m'; c_cyan='\033[38;5;51m'; c_purple='\033[38;5;141m'
-c_yellow='\033[38;5;220m'; c_red='\033[38;5;196m'
+RESET=$'\033[0m'
+BOLD=$'\033[1m'
+CYAN=$'\033[38;5;51m'
+GREEN=$'\033[38;5;46m'
+YELLOW=$'\033[38;5;220m'
+RED=$'\033[38;5;196m'
+DIM=$'\033[2m'
 
-pause(){ echo; read -rp "اضغط Enter للمتابعة..." _; }
-banner(){
+pause() {
+  printf "\n${YELLOW}Press Enter to continue...${RESET}"
+  read -r _
+}
+
+banner() {
   clear
-  printf "${c_cyan}${c_bold}"
+  printf "${CYAN}${BOLD}"
   cat <<'EOF'
 ╔══════════════════════════════════════════════╗
-║             T E R M U X  X                  ║
-║        ULTIMATE TERMINAL CUSTOMIZER         ║
+║               T E R M U X  X                ║
+║          ULTIMATE TERMINAL CUSTOMIZER        ║
 ╚══════════════════════════════════════════════╝
 EOF
-  printf "${c_reset}"
-  printf "${c_dim}  تخصيص الطرفية • الثيمات • شاشة الترحيب${c_reset}\n\n"
+  printf "${RESET}${DIM}             Customize your terminal${RESET}\n\n"
 }
-prompt_menu(){
-  echo "اختر شكل موجه الأوامر:"
-  echo "1) TERMUX-X  ➜"
-  echo "2) CYBER  ❯"
-  echo "3) BOX  ➤"
-  echo "4) MATRIX  »"
-  echo "5) كتابة شكل مخصص"
-  read -rp "اختيارك: " n
-  case "$n" in
-    1) p='[ TERMUX-X ] ➜ ' ;;
-    2) p='[ CYBER ] ❯ ' ;;
-    3) p='╰─➤ ' ;;
-    4) p='MATRIX » ' ;;
-    5) read -rp "اكتب الموجه (مثال: DEV ❯ ): " p ;;
-    *) echo "اختيار غير صالح"; pause; return ;;
-  esac
-  printf '%s\n' "$p" > "$BASE/prompt.txt"
-  apply_prompt
-  echo "تم حفظ شكل الموجه. افتح جلسة جديدة لتطبيقه بالكامل."
-  pause
-}
-apply_prompt(){
-  local p
-  p=$(cat "$BASE/prompt.txt" 2>/dev/null)
-  [ -z "$p" ] && p='~'
-  local rc="$HOME/.bashrc"
-  touch "$rc"
-  sed -i '/# >>> TERMUX-X PROMPT >>>/,/# <<< TERMUX-X PROMPT <<</d' "$rc"
-  cat >> "$rc" <<EOF
+
+apply_prompt() {
+  local prompt
+  prompt=$(cat "$BASE/prompt.txt" 2>/dev/null)
+  [ -n "$prompt" ] || prompt='~'
+  touch "$HOME/.bashrc"
+  sed -i '/# >>> TERMUX-X PROMPT >>>/,/# <<< TERMUX-X PROMPT <<</d' "$HOME/.bashrc"
+  cat >> "$HOME/.bashrc" <<EOF
 
 # >>> TERMUX-X PROMPT >>>
-PS1='\\[\\e[38;5;51m\\]${p}\\[\\e[0m\\]'
+PS1='\\[\\e[38;5;51m\\]${prompt}\\[\\e[0m\\] '
 # <<< TERMUX-X PROMPT <<<
 EOF
 }
-themes_menu(){
-  echo "الثيمات المتاحة:"
-  echo "1) Hacker Green"
-  echo "2) Cyberpunk"
-  echo "3) Dracula"
-  echo "4) Ocean Blue"
-  echo "5) Amber"
-  echo "6) Minimal"
-  read -rp "اختر: " n
+
+prompt_menu() {
+  clear
+  printf "${CYAN}PROMPT CUSTOMIZER${RESET}\n\n"
+  printf "1) [ TERMUX-X ] ->\n"
+  printf "2) [ CYBER ] >\n"
+  printf "3) BOX ->\n"
+  printf "4) MATRIX >>\n"
+  printf "5) Custom prompt\n"
+  printf "0) Back\n\n"
+  read -rp "Choose: " n
   case "$n" in
-    1) theme="Hacker Green"; color="32" ;;
-    2) theme="Cyberpunk"; color="35" ;;
-    3) theme="Dracula"; color="95" ;;
-    4) theme="Ocean Blue"; color="36" ;;
-    5) theme="Amber"; color="33" ;;
-    6) theme="Minimal"; color="0" ;;
-    *) echo "اختيار غير صالح"; pause; return ;;
+    1) p='[ TERMUX-X ] ->' ;;
+    2) p='[ CYBER ] >' ;;
+    3) p='╰─>' ;;
+    4) p='MATRIX >>' ;;
+    5) read -rp "Enter prompt text: " p ;;
+    0) return ;;
+    *) printf "${RED}Invalid choice${RESET}\n"; pause; return ;;
   esac
-  printf 'THEME="%s"\nCOLOR="%s"\n' "$theme" "$color" > "$BASE/theme.sh"
-  echo "معاينة: \033[${color}m TERMUX-X — $theme \033[0m"
-  echo "تم حفظ الثيم. بعض الألوان تعتمد على إعدادات التطبيق."
+  printf '%s\n' "$p" > "$BASE/prompt.txt"
+  apply_prompt
+  printf "${GREEN}Prompt saved. Restart Bash to see the change.${RESET}\n"
   pause
 }
-welcome_menu(){
-  echo "1) تفعيل شاشة الترحيب"
-  echo "2) إيقاف شاشة الترحيب"
-  read -rp "اختيارك: " n
+
+themes_menu() {
+  clear
+  printf "${CYAN}THEME LIBRARY${RESET}\n\n"
+  printf "1) Hacker Green\n2) Cyberpunk\n3) Dracula\n4) Ocean Blue\n5) Amber\n6) Minimal\n0) Back\n\n"
+  read -rp "Choose: " n
+  case "$n" in
+    1) theme="Hacker Green"; color=32 ;;
+    2) theme="Cyberpunk"; color=35 ;;
+    3) theme="Dracula"; color=95 ;;
+    4) theme="Ocean Blue"; color=36 ;;
+    5) theme="Amber"; color=33 ;;
+    6) theme="Minimal"; color=0 ;;
+    0) return ;;
+    *) printf "${RED}Invalid choice${RESET}\n"; pause; return ;;
+  esac
+  printf 'THEME="%s"\nCOLOR="%s"\n' "$theme" "$color" > "$BASE/theme.sh"
+  printf "\nPreview: \033[${color}m TERMUX-X — %s \033[0m\n" "$theme"
+  printf "${GREEN}Theme preference saved.${RESET}\n"
+  printf "${DIM}Note: app background and font are controlled separately in Termux settings.${RESET}\n"
+  pause
+}
+
+welcome_menu() {
+  clear
+  printf "${CYAN}WELCOME SCREEN${RESET}\n\n1) Enable\n2) Disable\n0) Back\n\n"
+  read -rp "Choose: " n
   touch "$HOME/.bashrc"
   sed -i '/# >>> TERMUX-X WELCOME >>>/,/# <<< TERMUX-X WELCOME <<</d' "$HOME/.bashrc"
   if [ "$n" = "1" ]; then
@@ -90,66 +100,79 @@ welcome_menu(){
 # >>> TERMUX-X WELCOME >>>
 printf '\033[38;5;51m'
 printf '╔══════════════════════════════╗\n'
-printf '║       WELCOME BACK!          ║\n'
-printf '║          TERMUX-X            ║\n'
+printf '║        WELCOME BACK!         ║\n'
+printf '║           TERMUX-X           ║\n'
 printf '╚══════════════════════════════╝\n'
 printf '\033[0m'
 # <<< TERMUX-X WELCOME <<<
 EOF
-    echo "تم تفعيل الترحيب."
-  else
-    echo "تم إيقاف الترحيب."
+    printf "${GREEN}Welcome screen enabled.${RESET}\n"
+  elif [ "$n" = "2" ]; then
+    printf "${GREEN}Welcome screen disabled.${RESET}\n"
   fi
   pause
 }
-sysinfo(){
-  echo "──── معلومات النظام ────"
-  echo "الجهاز: $(getprop ro.product.model 2>/dev/null || echo Android)"
-  echo "Android: $(getprop ro.build.version.release 2>/dev/null || echo Unknown)"
-  echo "المعمارية: $(uname -m)"
-  echo "النواة: $(uname -r)"
-  echo "مساحة HOME:"
+
+sysinfo() {
+  clear
+  printf "${CYAN}SYSTEM INFORMATION${RESET}\n\n"
+  printf "Device: %s\n" "$(getprop ro.product.model 2>/dev/null || echo Android)"
+  printf "Android: %s\n" "$(getprop ro.build.version.release 2>/dev/null || echo Unknown)"
+  printf "Architecture: %s\n" "$(uname -m)"
+  printf "Kernel: %s\n" "$(uname -r)"
+  printf "\nStorage:\n"
   df -h "$HOME" 2>/dev/null | tail -n 1
   pause
 }
-backup(){
+
+backup() {
   mkdir -p "$BASE/backups"
   stamp=$(date +%Y%m%d-%H%M%S)
-  tar -czf "$BASE/backups/termux-x-$stamp.tar.gz" "$HOME/.bashrc" "$HOME/.zshrc" "$BASE" 2>/dev/null
-  echo "تم إنشاء النسخة داخل: $BASE/backups"
+  tar -czf "$BASE/backups/termux-x-$stamp.tar.gz" \
+    "$HOME/.bashrc" "$HOME/.zshrc" "$BASE" 2>/dev/null
+  printf "${GREEN}Backup saved in %s/backups${RESET}\n" "$BASE"
   pause
 }
-restore(){
-  echo "سيتم حذف تعديلات TERMUX-X من .bashrc فقط."
-  read -rp "متأكد؟ (y/N): " a
-  [[ "$a" =~ ^[Yy]$ ]] || return
+
+restore() {
+  clear
+  printf "${YELLOW}This removes TERMUX-X prompt and welcome customizations.${RESET}\n"
+  read -rp "Continue? (y/N): " answer
+  [[ "$answer" =~ ^[Yy]$ ]] || return
   sed -i '/# >>> TERMUX-X PROMPT >>>/,/# <<< TERMUX-X PROMPT <<</d' "$HOME/.bashrc" 2>/dev/null
   sed -i '/# >>> TERMUX-X WELCOME >>>/,/# <<< TERMUX-X WELCOME <<</d' "$HOME/.bashrc" 2>/dev/null
   rm -f "$BASE/prompt.txt" "$BASE/theme.sh"
-  echo "تمت إزالة تخصيصات TERMUX-X."
+  printf "${GREEN}TERMUX-X customizations removed.${RESET}\n"
   pause
 }
+
 while true; do
   banner
-  echo " ${c_green}[01]${c_reset} مكتبة الثيمات"
-  echo " ${c_green}[02]${c_reset} تغيير موجه الأوامر (بديل علامة \$)"
-  echo " ${c_green}[03]${c_reset} شاشة الترحيب"
-  echo " ${c_green}[04]${c_reset} معلومات الجهاز"
-  echo " ${c_green}[05]${c_reset} إنشاء نسخة احتياطية"
-  echo " ${c_green}[06]${c_reset} استعادة الإعدادات"
-  echo " ${c_green}[07]${c_reset} تحديث الأداة"
-  echo " ${c_red}[00]${c_reset} خروج"
-  echo
-  read -rp "TERMUX-X » " choice
+  printf " ${GREEN}[01]${RESET} Theme library\n"
+  printf " ${GREEN}[02]${RESET} Change command prompt (replace \$)\n"
+  printf " ${GREEN}[03]${RESET} Welcome screen\n"
+  printf " ${GREEN}[04]${RESET} Device information\n"
+  printf " ${GREEN}[05]${RESET} Create backup\n"
+  printf " ${GREEN}[06]${RESET} Restore TERMUX-X settings\n"
+  printf " ${GREEN}[07]${RESET} Update tool\n"
+  printf " ${RED}[00]${RESET} Exit\n\n"
+  read -rp "TERMUX-X >> " choice
   case "$choice" in
-    1) themes_menu ;;
-    2) prompt_menu ;;
-    3) welcome_menu ;;
-    4) sysinfo ;;
-    5) backup ;;
-    6) restore ;;
-    7) cd "$(dirname "$0")" && git pull --ff-only 2>/dev/null; echo "انتهى فحص التحديث."; pause ;;
+    1|01) themes_menu ;;
+    2|02) prompt_menu ;;
+    3|03) welcome_menu ;;
+    4|04) sysinfo ;;
+    5|05) backup ;;
+    6|06) restore ;;
+    7|07)
+      if [ -d "$(dirname "$0")/.git" ]; then
+        git -C "$(dirname "$0")" pull --ff-only
+      else
+        printf "${YELLOW}Installed copy is not a Git repository. Update from your project folder.${RESET}\n"
+      fi
+      pause
+      ;;
     0|00) clear; exit 0 ;;
-    *) echo "اختيار غير صحيح"; sleep 1 ;;
+    *) printf "${RED}Invalid choice.${RESET}\n"; sleep 1 ;;
   esac
 done
